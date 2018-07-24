@@ -1,0 +1,4 @@
+*.o
+bochsout.txt
+*.bin
+.gdbinit
