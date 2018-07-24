@@ -1,4 +1,6 @@
 *.o
+objects/*
 bochsout.txt
 *.bin
+build/*.bin
 .gdbinit
