@@ -14,13 +14,23 @@ clean:
 	find $(BUILD_DIR) -name "*.bin" -delete
 	find $(OBJ_DIR) -name "*.o" -delete
 
+
 # ==== KERNEL ENTRY POINT ====
 
-start.o: $(addprefix $(SRC_DIR), start.asm)
+start.o: $(addprefix $(SRC_DIR), start.asm gdt_low.asm idt_low.asm)
 	nasm -f aout -o $(addprefix $(OBJ_DIR),start.o) $(addprefix $(SRC_DIR),start.asm)
 
+# ==== LOW LEVEL THINGS ====
 
-console.o: $(addprefix $(SRC_DIR),console.H console.C)
+gdt.o: $(addprefix $(SRC_DIR), gdt.C gdt.H)
+	gcc $(GCC_OPTIONS) -c -o $(addprefix $(OBJ_DIR),gdt.o) $(addprefix $(SRC_DIR),gdt.C)
+
+idt.o: $(addprefix $(SRC_DIR), idt.C idt.H)
+	gcc $(GCC_OPTIONS) -c -o $(addprefix $(OBJ_DIR),idt.o) $(addprefix $(SRC_DIR),idt.C)
+
+
+
+console.o: $(addprefix $(SRC_DIR),include/console.H console.C)
 	gcc $(GCC_OPTIONS) -c -o $(addprefix $(OBJ_DIR),console.o) $(addprefix $(SRC_DIR),console.C)
 
 # ==== KERNEL MAIN FILE ====
@@ -29,5 +39,5 @@ main.o: $(addprefix $(SRC_DIR),main.C)
 	gcc $(GCC_OPTIONS) -c -o $(addprefix $(OBJ_DIR),main.o) $(addprefix $(SRC_DIR),main.C)
 
 
-kernel.bin: start.o main.o console.o $(addprefix $(SRC_DIR),link.ld)
-	ld -melf_i386 -T $(addprefix $(SRC_DIR),link.ld) -o $(addprefix $(BUILD_DIR),kernel.bin) $(addprefix $(OBJ_DIR),start.o main.o console.o )
+kernel.bin: start.o main.o console.o gdt.o idt.o $(addprefix $(SRC_DIR),link.ld)
+	ld -melf_i386 -T $(addprefix $(SRC_DIR),link.ld) -o $(addprefix $(BUILD_DIR),kernel.bin) $(addprefix $(OBJ_DIR),start.o main.o console.o gdt.o idt.o)

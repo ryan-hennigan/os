@@ -5,6 +5,8 @@
 *  Notes: No warranty expressed or implied. Use at own risk. */
 #include <system.h>
 #include <console.H>
+#include <gdt.H>
+#include <idt.H>
 void *memcpy(void *dest, const void *src, size_t count)
 {
     const char *sp = (const char *)src;
@@ -48,7 +50,11 @@ void outportb (unsigned short _port, unsigned char _data)
 
 int main()
 {
-    Console::init_video();
+    GDT::init();
+
+    Console::init();
+    
+    IDT::init();
 
     Console::puts("Hello World!\n");
 

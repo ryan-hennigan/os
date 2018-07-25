@@ -160,7 +160,7 @@ void Console::settextcolor(unsigned char forecolor, unsigned char backcolor)
 }
 
 /* Sets our text-mode VGA pointer, then clears the screen for us */
-void Console::init_video(void)
+void Console::init(void)
 {
     textmemptr = (unsigned short *)0xB8000;
     cls();

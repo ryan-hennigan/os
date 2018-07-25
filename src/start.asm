@@ -47,8 +47,10 @@ stublet:
     call _main
     jmp $
 
+; Set up Global Descriptor Table
+%include "./src/gdt_low.asm"
 
-
+%include "./src/idt_low.asm"
 
 ; Here is the definition of our BSS section. Right now, we'll use
 ; it just to store the stack. Remember that a stack actually grows
