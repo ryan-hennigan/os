@@ -2,18 +2,18 @@
 
 ### Build
 
-To build, run the  src/makefile.
+To build, run `make` in the directory `src/`.
 
 ### Run
 
-To run, run bochs -q in the build/ folder.
+To run, run `bochs -q` in the `build/` folder.
 
 ## Overview
 
 The end goal of this OS is to contain these features:
 + Memory Management
   + Main Memory
-  	+ Paging
+  	+ [Paging](./docs/paging.md)
   	+ Segmentation
   + Virtual Memory
 + Storage Management
