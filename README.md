@@ -15,7 +15,7 @@ The end goal of this OS is to contain these features:
   + Main Memory
   	+ [Paging](./docs/paging.md)
   	+ Segmentation
-  + Virtual Memory
+  + [Virtual Memory](./docs/virtualmemory.md)
 + Storage Management
     + File System
     + I/O system 
