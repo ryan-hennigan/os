@@ -28,16 +28,16 @@ public:
     static void move_csr(void);
     static void cls();
     static void putch(const char c);
+    static void puti(const int i);
+    static void putui(const unsigned int i);
     static void puts(const char *text);
     static void settextcolor(unsigned char forecolor, unsigned char backcolor);
     static void init(void);
-
 private:
     static unsigned short *textmemptr;
     static int attrib;
     static int csr_x, csr_y;
 };
-
 #endif
 
 

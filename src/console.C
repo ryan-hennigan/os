@@ -4,8 +4,9 @@
 *
 *  Notes: No warranty expressed or implied. Use at own risk. */
 
-#include <system.h>
+#include "utils.H"
 #include <console.H>
+#include "machine.H"
 
 
 
@@ -57,10 +58,10 @@ void Console::move_csr(void)
     *  learn more, you should look up some VGA specific
     *  programming documents. A great start to graphics:
     *  http://www.brackeen.com/home/vga */
-    outportb(0x3D4, 14);
-    outportb(0x3D5, temp >> 8);
-    outportb(0x3D4, 15);
-    outportb(0x3D5, temp);
+    Machine::outportb(0x3D4, 14);
+    Machine::outportb(0x3D5, temp >> 8);
+    Machine::outportb(0x3D4, 15);
+    Machine::outportb(0x3D5, temp);
 }
 
 /* Clears the screen */
@@ -138,6 +139,22 @@ void Console::putch(const char c)
     /* Scroll the screen if needed, and finally move the cursor */
     scroll();
     move_csr();
+}
+
+void Console::puti(const int _n) {
+    char foostr[15];
+
+    int2str(_n, foostr);
+    puts(foostr);
+}
+
+void Console::putui(const unsigned int _n) {
+    char foostr[15];
+
+    uint2str(_n, foostr);
+    putch('<');
+    puts(foostr);
+    putch('>');
 }
 
 /* Uses the above routine to output a string... */

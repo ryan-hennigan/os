@@ -18,7 +18,7 @@
 
 //#include "assert.H"
 //#include "utils.H"
-#include <system.h>
+#include "utils.H"
 #include "idt.H"
 #include "console.H"
 
@@ -71,7 +71,7 @@ void IDT::set_gate(unsigned char num, unsigned long base,
                    unsigned short sel, unsigned char flags) {
 
     Console::puts("Installing handler in IDT position ");
-    Console::putch(num - '0');
+    Console::puti((int)num);
     Console::puts("\n");
 
     /* The interrupt routine's base address */
