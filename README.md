@@ -2,11 +2,19 @@
 
 ### Build
 
-To build, run `make` in the directory `src/`.
+To build:
+```
+cd src/
+make
+```
 
 ### Run
 
-To run, run `bochs -q` in the `build/` folder.
+To run:
+```
+cd build/
+bochs -q
+```
 
 ## Overview
 
