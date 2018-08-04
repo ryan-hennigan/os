@@ -9,7 +9,7 @@
 #define OFFSET (32-PDE-PTE)
 #define READ_WRITE 0x2
 #define VALID 0x1
-
+#define USER 0x4
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
@@ -18,7 +18,7 @@
 #include "machine.H"
 #include "exceptions.H"
 #include "frame_pool.H"
-//#include "vm_pool.H"
+#include "vm_pool.H"
 
 /*--------------------------------------------------------------------------*/
 /* FORWARDS */
@@ -35,9 +35,7 @@ class PageTable {
 
 private:
 
- // VMPool* head;
-
-
+  VMPool* head;
 
   /* THESE MEMBERS ARE COMMON TO ENTIRE PAGING SUBSYSTEM */
   static PageTable     * current_page_table; /* pointer to currently loaded page table object */
@@ -83,18 +81,12 @@ public:
   static void handle_fault(REGS * _r);
   /* The page fault handler. */
 
-
-
-  //void register_pool(VMPool * _vm_pool);
+  void register_pool(VMPool * _vm_pool);
   /* Register a virtual memory pool with the page table. */
   
   void free_page(unsigned long _page_no);
   /* If page is valid, release frame and mark page invalid. */
  
-
-
-
-
 };
 
 #endif

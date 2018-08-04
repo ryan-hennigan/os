@@ -43,6 +43,9 @@ page_table.o: page_table.C include/page_table.H include/paging_low.H
 paging_low.o: paging_low.asm include/paging_low.H
 	nasm -f aout -o paging_low.o paging_low.asm
 
+vm_pool.o: vm_pool.C include/vm_pool.H 
+	gcc $(GCC_OPTIONS) -c -o vm_pool.o vm_pool.C
+
 
 
 
@@ -75,6 +78,8 @@ main.o: main.C
 
 
 kernel.bin: start.o utils.o main.o assert.o console.o gdt.o idt.o exceptions.o machine.o \
-    machine_low.o irq.o interrupts.o link.ld timer.o frame_pool.o paging_low.o page_table.o
-	ld -melf_i386 -T link.ld -o ../build/kernel.bin start.o utils.o assert.o main.o console.o gdt.o idt.o exceptions.o machine.o machine_low.o irq.o interrupts.o timer.o frame_pool.o page_table.o paging_low.o
-	rm *.o
+    machine_low.o irq.o interrupts.o link.ld timer.o frame_pool.o paging_low.o page_table.o \
+    vm_pool.o
+	ld -melf_i386 -T link.ld -o ../build/kernel.bin start.o utils.o assert.o main.o console.o \
+	   gdt.o idt.o exceptions.o machine.o machine_low.o irq.o interrupts.o timer.o frame_pool.o \
+	   page_table.o paging_low.o vm_pool.o

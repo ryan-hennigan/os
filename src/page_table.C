@@ -72,15 +72,15 @@ void PageTable::handle_fault(REGS * _r)
 	pde = addr >> (PTE+OFFSET);
 	pte = (addr << PDE) >> (PTE+OFFSET);
 
-//	//make sure reference is in the VMPool or part of the Page Table system
-//	bool legit = false;
-//	VMPool* tmp = current_page_table->head;
-//	while(tmp){
-//		if(tmp->is_legitimate(addr)) legit = true;
-//		tmp = tmp->next;
-//	}
-//	if(addr >= 0xffc00000) legit = true;
-//	assert(legit && "INVALID memory reference!");
+	//make sure reference is in the VMPool or part of the Page Table system
+	bool legit = false;
+	VMPool* tmp = current_page_table->head;
+	while(tmp){
+		if(tmp->is_legitimate(addr)) legit = true;
+		tmp = tmp->next;
+	}
+	if(addr >= 0xffc00000) legit = true;
+	assert(legit && "INVALID memory reference!");
 
 	//no pde, so make an new one w/ the recursive lookup
 	unsigned long * page_directory_r = (unsigned long *)0xfffff000;
@@ -106,15 +106,15 @@ void PageTable::handle_fault(REGS * _r)
 	}
 }
 
-//void PageTable::register_pool(VMPool * _vm_pool)
-//{
-//	//use the vm pool as a node for the list
-//	_vm_pool->next = head;
-//	head = _vm_pool;	
-//
-//	Console::puts("registered VM pool\n");
-//}
-//
+void PageTable::register_pool(VMPool * _vm_pool)
+{
+	//use the vm pool as a node for the list
+	_vm_pool->next = head;
+	head = _vm_pool;	
+
+	Console::puts("registered VM pool\n");
+}
+
 void PageTable::free_page(unsigned long _page_no) {
 	Console::puts("freed page\n");
 

@@ -62,6 +62,8 @@ struct idt_ptr
 struct idt_entry idt[IDT::SIZE];
 struct idt_ptr idtp;
 
+using namespace kutils;
+
 /*--------------------------------------------------------------------------*/
 /* HOOKING UP THE LOW-LEVEL EXCEPTION HANDLER TO EXCEPTIONDISPATCHER.       */
 /*--------------------------------------------------------------------------*/

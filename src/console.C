@@ -9,12 +9,12 @@
 #include "machine.H"
 
 
-
     int Console::attrib = 0x0F;
     int Console::csr_x = 0;
     int Console::csr_y = 0;
     unsigned short * Console::textmemptr = 0;
 
+using namespace kutils;
 
 /* Scrolls the screen */
 void Console::scroll(void)

@@ -9,6 +9,8 @@
 #   define NULL 0
 #endif
 
+namespace kutils{
+
 /*---------------------------------------------------------------*/
 /* ABORT */
 /*---------------------------------------------------------------*/
@@ -44,5 +46,5 @@ void int2str(int _num, char * _str);
 
 void uint2str(unsigned int _num, char * _str);
 /* Convert unsigned int to null-terminated string. */
-
+}
 #endif
