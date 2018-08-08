@@ -10,7 +10,7 @@ class GDT {
 private:
 
   /* Use this function to set up an entry in the GDT. */
-  static void set_gate(int num, 
+  void set_gate(int num, 
                        unsigned long base, unsigned long limit, 
                        unsigned char access, unsigned char gran);
 
@@ -21,7 +21,7 @@ public:
      and one data segment.
   */
 
-  static void init();
+  void init();
 
   static const unsigned int SIZE = 3;
 };

@@ -7,24 +7,21 @@
 
 #include "assert.H"
 #include "machine.H"
+#include "idt.H"
 
 /*--------------------------------------------------------------------------*/
 /* E x c e p t i o n H a n d l e r  */
 /*--------------------------------------------------------------------------*/
 
-class ExceptionHandler {
+class ExceptionHandler;
 
-  private:
+class ExceptionManager{
 
-  /* The Exception Handler Table */
-  const static int EXCEPTION_TABLE_SIZE = 32;
-  static ExceptionHandler * handler_table[EXCEPTION_TABLE_SIZE];
-  
-  public: 
+  public:
 
-  /* -- POPULATE DISPATCHER TABLE */
+  ExceptionManager(IDT& idt);
 
-  static void register_handler(unsigned int        _isr_code,
+  void register_handler(unsigned int        _isr_code,
                                ExceptionHandler  * _handler);
   /* This function allows to install an exception handler for the given 
      exception code. The handler is a function pointer defined above. 
@@ -32,10 +29,10 @@ class ExceptionHandler {
      The 'register_interrupt' function uses irq2isr to map the IRQ 
      number to the code. */
 
-  static void deregister_handler(unsigned int _isr_code);
+  void deregister_handler(unsigned int _isr_code);
 
   /* -- DISPATCHER */
-  static void init_dispatcher();
+  void init_dispatcher();
   /* This function is called to initialize the high-level exception handling. 
      No high level exception handlers are installed yet. If an exception 
      occurs at this point, the system displays an error message and 
@@ -47,6 +44,22 @@ class ExceptionHandler {
      This function is called by the low-level function 
      "lowlevel_dispatch_exception(REGS * _r)".*/
 
+
+  private:
+
+  const static int EXCEPTION_TABLE_SIZE = 32;
+  static ExceptionHandler * handler_table[EXCEPTION_TABLE_SIZE];
+  IDT idt;
+};
+
+class ExceptionHandler {
+
+  /* The Exception Handler Table */
+  public: 
+
+  ExceptionHandler(){}
+
+  /* -- POPULATE DISPATCHER TABLE */
   /* -- MANAGE INSTANCES OF EXCEPTION HANDLERS */
 
   virtual void handle_exception(REGS * _regs) {

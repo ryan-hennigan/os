@@ -3,6 +3,12 @@
 *  Desc: Main.c: C code entry.
 *
 *  Notes: No warranty expressed or implied. Use at own risk. */
+
+#include "assert.H"
+
+extern "C" void __cxa_pure_virtual() { assert(false); } 
+
+
 #include "types.H"
 #include "machine.H"
 #include "gdt.H"
@@ -21,6 +27,9 @@
 #include "paging_low.H"
 #include "page_table.H"
 #include "vm_pool.H"
+#include "buddy_vm.H"
+
+#include "thread.H"
 
 /*--------------------------------------------------*/
 /*  DEFINES  */
@@ -58,6 +67,47 @@ void failed();
 
 VMPool* current_pool;
 
+
+Thread* t1;
+Thread* t2;
+
+
+void passcpu(Thread* x)
+{
+	Thread::dispatch_to(x);
+}
+
+
+void fun1()
+{
+
+   for(int i = 0;; i++){
+      Console::puts("\nIN THREAD 1111\n");
+      Console::puti(i);
+
+      if(i > 100){
+         i = 0;
+         passcpu(t2);
+      }
+   }
+
+}
+
+void fun2()
+{
+
+   for(int i = 0;; i++){
+      Console::puts("\nIN THREAD 222222222\n");
+      Console::puti(i);
+
+      if(i > 100){
+         i = 0;
+         passcpu(t1);
+      }
+   }
+}
+
+
 typedef unsigned int size_t;
 
 //replace the operator "new"
@@ -82,33 +132,37 @@ void operator delete[] (void * p) {
   current_pool->release((unsigned long)p);
 }
 
-
-
-
 int main()
 {
     //init Global Descriptor Table
-    GDT::init();
+    GDT gdt;
+    gdt.init();
 
     Console::init();
     
     //init Interrupt Descriptor Table and Exceptions 
-    IDT::init();
-    ExceptionHandler::init_dispatcher();
+    IDT idt;
+    idt.init();
+
+    ExceptionManager emanager(idt);
+    emanager.init_dispatcher();
 
     //init Interrupts
-    IRQ::init();
-    InterruptHandler::init_dispatcher();
+    IRQ irq;
+    irq.init();
+
+    InterruptManager imanager(idt);
+    imanager.init_dispatcher();
 
     // --- Simple Timer to handle timer interrupts ---//
     Timer timer;
-    InterruptHandler::register_handler(0, &timer);
+    imanager.register_handler(0,&timer);
 
     //need timer before enabling interrupts
     Machine::enable_interrupts();
 
     // --- Setup Kernel Frame Pool Manager --- //
-    FramePool kernelframepool(KERNEL_POOL_START_FRAME, KERNEL_POOL_SIZE, 0, 0);
+    FramePool kernelframepool(KERNEL_POOL_START_FRAME, KERNEL_POOL_SIZE, 0, FramePool::needed_info_frames(KERNEL_POOL_SIZE));
 
     // --- Setup User Frame Pool Manager --- //
     uint32_t num_info_frames = FramePool::needed_info_frames(PROCESS_POOL_SIZE);
@@ -119,14 +173,15 @@ int main()
     //leave space for ISA
     processframepool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
 
-  //  Console::puts("Testing kernel mempool...");
-  //  test_framing(&kernelframepool, 10);
-  //  passed();
+#if TEST
+    Console::puts("Testing kernel mempool...");
+    test_framing(&kernelframepool, 10);
+    passed();
 
-  //  Console::puts("Testing process mempool...");
-  //  test_framing(&processframepool, 170);
-  //  passed();
-
+    Console::puts("Testing process mempool...");
+    test_framing(&processframepool, 170);
+    passed();
+#endif
    // --- Setup and Enable Paging --- //
 
     class PageFault_Handler : public ExceptionHandler {
@@ -137,8 +192,8 @@ int main()
           PageTable::handle_fault(_regs);
         }
     } pagefault_handler;
-
-    ExceptionHandler::register_handler(14, &pagefault_handler);
+    
+    emanager.register_handler(14, &pagefault_handler);
 
     PageTable::init_paging(&kernelframepool, &processframepool, 4 MB);
 
@@ -148,28 +203,48 @@ int main()
 
     PageTable::enable_paging();
 
-//    test_paging(4 MB, (1 MB)/4);
-
+#if TEST
+    test_paging(4 MB, (1 MB)/4);
+#endif
 
    // --- Setup and Enable Virtual Memeory --- //
 
-    VMPool code_pool(512 MB, 256 MB, &processframepool, &pt1);
-    VMPool heap_pool(1 GB, 256 MB, &processframepool, &pt1);
+    BuddyVm code_pool(512 MB, 256 MB, &processframepool, &pt1);
+    BuddyVm heap_pool(1 GB, 256 MB, &processframepool, &pt1);
+    current_pool = &heap_pool; 
+
 
     /* -- NOW THE POOLS HAVE BEEN CREATED. */
 
     Console::puts("VM Pools successfully created!\n");
 
     /* -- GENERATE MEMORY REFERENCES TO THE VM POOLS */
-
+#if TEST
     Console::puts("I am starting with an extensive test\n");
     Console::puts("of the VM Pool memory allocator.\n");
     Console::puts("Please be patient...\n");
     Console::puts("Testing the memory allocation on code_pool...\n");
-    //test_vmmem(&code_pool, 50, 100);
+    test_vmmem(&code_pool, 50, 10);
     Console::puts("Testing the memory allocation on heap_pool...\n");
-    //test_vmmem(&heap_pool, 50, 200);
+    test_vmmem(&heap_pool, 4096, 4);
+#endif
 
+
+
+    //TODO create scheduler
+
+
+    //threading setup
+    char* stack1 = new char[1024];
+    t1 = new Thread(fun1,stack1,1024);
+
+    char* stack2 = new char[1024];
+    t2 = new Thread(fun2,stack2,1024);
+
+    assert(stack1!=stack2);
+
+    //threading kickoff
+    Thread::dispatch_to(t1);
 
     loading_message(); 
 
@@ -211,16 +286,12 @@ void test_vmmem(VMPool *pool, int size1, int size2) {
    current_pool = pool;
    for(int i=1; i<size1; i++) {
       int *arr = new int[size2 * i];
-      if(pool->is_legitimate((unsigned long)arr) == false) {
-         failed();
-      }
+      assert(pool->is_legitimate((uint64_t)arr));
       for(int j=0; j<size2*i; j++) {
          arr[j] = j;
       }
       for(int j=size2*i - 1; j>=0; j--) {
-         if(arr[j] != j) {
-            failed();
-         }
+	assert(arr[j]==j);
       }
       delete arr;
    }
@@ -254,4 +325,5 @@ void failed(){
     Console::puts("FAILED!");
     Console::settextcolor(WHITE,BLACK);
     Console::puts("\n");
+   for(;;);
 }

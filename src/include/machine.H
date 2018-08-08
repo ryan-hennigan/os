@@ -66,7 +66,8 @@ typedef struct regs {
 class Machine {
 
 public:
-  
+  static const unsigned int KERNEL_DS = 0x10;
+  static const unsigned int KERNEL_CS = 0x08;  
 /*---------------------------------------------------------------*/
 /* MEMORY MANAGEMENT */
 /*---------------------------------------------------------------*/

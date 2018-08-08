@@ -47,40 +47,46 @@ extern "C" void irq14();
 extern "C" void irq15();
 
 extern "C" void lowlevel_dispatch_interrupt(REGS * _r) {
-  InterruptHandler::dispatch_interrupt(_r);
+  InterruptManager::dispatch_interrupt(_r);
 }
 
 /*--------------------------------------------------------------------------*/
 /* LOCAL VARIABLES */
 /*--------------------------------------------------------------------------*/
 
-InterruptHandler * InterruptHandler::handler_table[InterruptHandler::IRQ_TABLE_SIZE];
+InterruptHandler * InterruptManager::handler_table[InterruptManager::IRQ_TABLE_SIZE];
   
 /*--------------------------------------------------------------------------*/
 /* EXPORTED INTERRUPT DISPATCHER FUNCTIONS */
 /*--------------------------------------------------------------------------*/
 
-void InterruptHandler::init_dispatcher() {
+InterruptManager::InterruptManager(IDT& _idt):
+   idt(_idt)
+{
+}
+
+
+void InterruptManager::init_dispatcher() {
 
   /* -- INITIALIZE LOW-LEVEL INTERRUPT HANDLERS */
   /*    Add any new ISRs to the IDT here using IDT::set_gate */
-  IDT::set_gate( 0+ IRQ_BASE, (unsigned) irq0, 0x08, 0x8E);
-  IDT::set_gate( 1+ IRQ_BASE, (unsigned) irq1, 0x08, 0x8E);
-  IDT::set_gate( 2+ IRQ_BASE, (unsigned) irq2, 0x08, 0x8E);
-  IDT::set_gate( 3+ IRQ_BASE, (unsigned) irq3, 0x08, 0x8E);
-  IDT::set_gate( 4+ IRQ_BASE, (unsigned) irq4, 0x08, 0x8E);
-  IDT::set_gate( 5+ IRQ_BASE, (unsigned) irq5, 0x08, 0x8E);
-  IDT::set_gate( 6+ IRQ_BASE, (unsigned) irq6, 0x08, 0x8E);
-  IDT::set_gate( 7+ IRQ_BASE, (unsigned) irq7, 0x08, 0x8E);
+  idt.set_gate( 0+ IRQ_BASE, (unsigned) irq0, 0x08, 0x8E);
+  idt.set_gate( 1+ IRQ_BASE, (unsigned) irq1, 0x08, 0x8E);
+  idt.set_gate( 2+ IRQ_BASE, (unsigned) irq2, 0x08, 0x8E);
+  idt.set_gate( 3+ IRQ_BASE, (unsigned) irq3, 0x08, 0x8E);
+  idt.set_gate( 4+ IRQ_BASE, (unsigned) irq4, 0x08, 0x8E);
+  idt.set_gate( 5+ IRQ_BASE, (unsigned) irq5, 0x08, 0x8E);
+  idt.set_gate( 6+ IRQ_BASE, (unsigned) irq6, 0x08, 0x8E);
+  idt.set_gate( 7+ IRQ_BASE, (unsigned) irq7, 0x08, 0x8E);
 
-  IDT::set_gate( 8+ IRQ_BASE, (unsigned) irq8, 0x08, 0x8E);
-  IDT::set_gate( 9+ IRQ_BASE, (unsigned) irq9, 0x08, 0x8E);
-  IDT::set_gate(10+ IRQ_BASE, (unsigned)irq10, 0x08, 0x8E);
-  IDT::set_gate(11+ IRQ_BASE, (unsigned)irq11, 0x08, 0x8E);
-  IDT::set_gate(12+ IRQ_BASE, (unsigned)irq12, 0x08, 0x8E);
-  IDT::set_gate(13+ IRQ_BASE, (unsigned)irq13, 0x08, 0x8E);
-  IDT::set_gate(14+ IRQ_BASE, (unsigned)irq14, 0x08, 0x8E);
-  IDT::set_gate(15+ IRQ_BASE, (unsigned)irq15, 0x08, 0x8E);
+  idt.set_gate( 8+ IRQ_BASE, (unsigned) irq8, 0x08, 0x8E);
+  idt.set_gate( 9+ IRQ_BASE, (unsigned) irq9, 0x08, 0x8E);
+  idt.set_gate(10+ IRQ_BASE, (unsigned)irq10, 0x08, 0x8E);
+  idt.set_gate(11+ IRQ_BASE, (unsigned)irq11, 0x08, 0x8E);
+  idt.set_gate(12+ IRQ_BASE, (unsigned)irq12, 0x08, 0x8E);
+  idt.set_gate(13+ IRQ_BASE, (unsigned)irq13, 0x08, 0x8E);
+  idt.set_gate(14+ IRQ_BASE, (unsigned)irq14, 0x08, 0x8E);
+  idt.set_gate(15+ IRQ_BASE, (unsigned)irq15, 0x08, 0x8E);
 
   /* -- INITIALIZE THE HIGH-LEVEL INTERRUPT HANDLER */
   int i;
@@ -89,11 +95,11 @@ void InterruptHandler::init_dispatcher() {
   }
 }
 
-bool InterruptHandler::generated_by_slave_PIC(unsigned int int_no) {
+bool InterruptManager::generated_by_slave_PIC(unsigned int int_no) {
   return int_no > 7;
 }
 
-void InterruptHandler::dispatch_interrupt(REGS * _r) {
+void InterruptManager::dispatch_interrupt(REGS * _r) {
 
   /* -- INTERRUPT NUMBER */
   unsigned int int_no = _r->int_no - IRQ_BASE;
@@ -137,7 +143,7 @@ void InterruptHandler::dispatch_interrupt(REGS * _r) {
     
 }
 
-void InterruptHandler::register_handler(unsigned int        _irq_code,
+void InterruptManager::register_handler(unsigned int        _irq_code,
 		                        InterruptHandler  * _handler) {
   assert(_irq_code >= 0 && _irq_code < IRQ_TABLE_SIZE);
 
@@ -149,7 +155,7 @@ void InterruptHandler::register_handler(unsigned int        _irq_code,
 
 }
 
-void InterruptHandler::deregister_handler(unsigned int _irq_code) {
+void InterruptManager::deregister_handler(unsigned int _irq_code) {
   
   assert(_irq_code >= 0 && _irq_code < IRQ_TABLE_SIZE);
 

@@ -62,14 +62,14 @@ extern "C" void isr30();
 extern "C" void isr31();
 
 extern "C" void lowlevel_dispatch_exception(REGS * _r) {
-  ExceptionHandler::dispatch_exception(_r);
+  ExceptionManager::dispatch_exception(_r);
 }
 
 /*--------------------------------------------------------------------------*/
 /* STATIC VARIABLES */
 /*--------------------------------------------------------------------------*/
 
-ExceptionHandler * ExceptionHandler::handler_table[ExceptionHandler::EXCEPTION_TABLE_SIZE];
+ExceptionHandler * ExceptionManager::handler_table[ExceptionManager::EXCEPTION_TABLE_SIZE];
 
 /*--------------------------------------------------------------------------*/
 /* EXCEPTION NAME MAP */
@@ -117,45 +117,52 @@ const char* exception_names[] =
 
 using namespace kutils;
 
-void ExceptionHandler::init_dispatcher() {
+ExceptionManager::ExceptionManager(IDT& _idt) :
+   idt(_idt)
+{
+}
+
+
+void ExceptionManager::init_dispatcher()
+ {
 
   /* -- INITIALIZE LOW-LEVEL EXCEPTION HANDLERS */
   /*    Add any new ISRs to the IDT here using IDT::set_gate */
-  IDT::set_gate( 0, (unsigned) isr0, 0x08, 0x8E);
-  IDT::set_gate( 1, (unsigned) isr1, 0x08, 0x8E);
-  IDT::set_gate( 2, (unsigned) isr2, 0x08, 0x8E);
-  IDT::set_gate( 3, (unsigned) isr3, 0x08, 0x8E);
-  IDT::set_gate( 4, (unsigned) isr4, 0x08, 0x8E);
-  IDT::set_gate( 5, (unsigned) isr5, 0x08, 0x8E);
-  IDT::set_gate( 6, (unsigned) isr6, 0x08, 0x8E);
-  IDT::set_gate( 7, (unsigned) isr7, 0x08, 0x8E);
+  idt.set_gate( 0, (unsigned) isr0, 0x08, 0x8E);
+  idt.set_gate( 1, (unsigned) isr1, 0x08, 0x8E);
+  idt.set_gate( 2, (unsigned) isr2, 0x08, 0x8E);
+  idt.set_gate( 3, (unsigned) isr3, 0x08, 0x8E);
+  idt.set_gate( 4, (unsigned) isr4, 0x08, 0x8E);
+  idt.set_gate( 5, (unsigned) isr5, 0x08, 0x8E);
+  idt.set_gate( 6, (unsigned) isr6, 0x08, 0x8E);
+  idt.set_gate( 7, (unsigned) isr7, 0x08, 0x8E);
 
-  IDT::set_gate( 8, (unsigned) isr8, 0x08, 0x8E);
-  IDT::set_gate( 9, (unsigned) isr9, 0x08, 0x8E);
-  IDT::set_gate(10, (unsigned)isr10, 0x08, 0x8E);
-  IDT::set_gate(11, (unsigned)isr11, 0x08, 0x8E);
-  IDT::set_gate(12, (unsigned)isr12, 0x08, 0x8E);
-  IDT::set_gate(13, (unsigned)isr13, 0x08, 0x8E);
-  IDT::set_gate(14, (unsigned)isr14, 0x08, 0x8E);
-  IDT::set_gate(15, (unsigned)isr15, 0x08, 0x8E);
+  idt.set_gate( 8, (unsigned) isr8, 0x08, 0x8E);
+  idt.set_gate( 9, (unsigned) isr9, 0x08, 0x8E);
+  idt.set_gate(10, (unsigned)isr10, 0x08, 0x8E);
+  idt.set_gate(11, (unsigned)isr11, 0x08, 0x8E);
+  idt.set_gate(12, (unsigned)isr12, 0x08, 0x8E);
+  idt.set_gate(13, (unsigned)isr13, 0x08, 0x8E);
+  idt.set_gate(14, (unsigned)isr14, 0x08, 0x8E);
+  idt.set_gate(15, (unsigned)isr15, 0x08, 0x8E);
 
-  IDT::set_gate(16, (unsigned)isr16, 0x08, 0x8E);
-  IDT::set_gate(17, (unsigned)isr17, 0x08, 0x8E);
-  IDT::set_gate(18, (unsigned)isr18, 0x08, 0x8E);
-  IDT::set_gate(19, (unsigned)isr19, 0x08, 0x8E);
-  IDT::set_gate(20, (unsigned)isr20, 0x08, 0x8E);
-  IDT::set_gate(21, (unsigned)isr21, 0x08, 0x8E);
-  IDT::set_gate(22, (unsigned)isr22, 0x08, 0x8E);
-  IDT::set_gate(23, (unsigned)isr23, 0x08, 0x8E);
+  idt.set_gate(16, (unsigned)isr16, 0x08, 0x8E);
+  idt.set_gate(17, (unsigned)isr17, 0x08, 0x8E);
+  idt.set_gate(18, (unsigned)isr18, 0x08, 0x8E);
+  idt.set_gate(19, (unsigned)isr19, 0x08, 0x8E);
+  idt.set_gate(20, (unsigned)isr20, 0x08, 0x8E);
+  idt.set_gate(21, (unsigned)isr21, 0x08, 0x8E);
+  idt.set_gate(22, (unsigned)isr22, 0x08, 0x8E);
+  idt.set_gate(23, (unsigned)isr23, 0x08, 0x8E);
 
-  IDT::set_gate(24, (unsigned)isr24, 0x08, 0x8E);
-  IDT::set_gate(25, (unsigned)isr25, 0x08, 0x8E);
-  IDT::set_gate(26, (unsigned)isr26, 0x08, 0x8E);
-  IDT::set_gate(27, (unsigned)isr27, 0x08, 0x8E);
-  IDT::set_gate(28, (unsigned)isr28, 0x08, 0x8E);
-  IDT::set_gate(29, (unsigned)isr29, 0x08, 0x8E);
-  IDT::set_gate(30, (unsigned)isr30, 0x08, 0x8E);
-  IDT::set_gate(31, (unsigned)isr31, 0x08, 0x8E);
+  idt.set_gate(24, (unsigned)isr24, 0x08, 0x8E);
+  idt.set_gate(25, (unsigned)isr25, 0x08, 0x8E);
+  idt.set_gate(26, (unsigned)isr26, 0x08, 0x8E);
+  idt.set_gate(27, (unsigned)isr27, 0x08, 0x8E);
+  idt.set_gate(28, (unsigned)isr28, 0x08, 0x8E);
+  idt.set_gate(29, (unsigned)isr29, 0x08, 0x8E);
+  idt.set_gate(30, (unsigned)isr30, 0x08, 0x8E);
+  idt.set_gate(31, (unsigned)isr31, 0x08, 0x8E);
 
   /* -- INITIALIZE THE HIGH-LEVEL EXCEPTION HANDLER */
   int i;
@@ -164,7 +171,7 @@ void ExceptionHandler::init_dispatcher() {
   }
 }
 
-void ExceptionHandler::dispatch_exception(REGS * _r) {
+void ExceptionManager::dispatch_exception(REGS * _r) {
 
   /* -- EXCEPTION NUMBER */
   unsigned int exc_no = _r->int_no;
@@ -195,7 +202,7 @@ void ExceptionHandler::dispatch_exception(REGS * _r) {
 
 }
 
-void ExceptionHandler::register_handler(unsigned int       _isr_code,
+void ExceptionManager::register_handler(unsigned int       _isr_code,
                                         ExceptionHandler * _handler) {
 
   assert(_isr_code >= 0 && _isr_code < EXCEPTION_TABLE_SIZE);
@@ -208,7 +215,7 @@ void ExceptionHandler::register_handler(unsigned int       _isr_code,
 
 }
 
-void ExceptionHandler::deregister_handler(unsigned int    _isr_code) {
+void ExceptionManager::deregister_handler(unsigned int    _isr_code) {
   assert(_isr_code >= 0 && _isr_code < EXCEPTION_TABLE_SIZE);
 
   handler_table[_isr_code] = NULL;
