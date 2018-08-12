@@ -2,9 +2,11 @@
 
 //#include <vm_pool.H>
 
+//#include "mocks/console_mock.cpp"
 #include "test_utils.cpp"
-#include "test_vmpool.cpp"
-//#include "console_test.cpp"
+#include "buddy_vm_test.cpp"
+#include "bitmap_test.cpp"
+#include "memmap_test.cpp"
 
 
 void Console::putui(const unsigned int i){std::cout << i << std::endl;}

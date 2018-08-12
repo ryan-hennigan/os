@@ -1,5 +1,5 @@
 #include "buddy_vm.H"
-#include "console.H"
+//#include "console.H"
 #include "utils.H"
 #include "assert.H"
 #include "page_table.H"
@@ -57,7 +57,7 @@ BuddyVm::BuddyVm(unsigned long  _base_address, unsigned long  _size, FramePool *
 	//add to the fl table at highest point
 	fl_add(tableSize-1,flshp);
 
-	Console::puts("Constructed VMPool object.\n");
+	//Console::puts("Constructed VMPool object.\n");
 }
 
 uint64_t BuddyVm::allocate(uint64_t _size) 
@@ -88,7 +88,7 @@ uint64_t BuddyVm::allocate(uint64_t _size)
 		return (uint64_t)((char*)tmp+sizeof(fl_header));
 	}
 	else{
-		assert(false);
+		//assert(false);
 		return 0L;
 	}
 }
@@ -101,15 +101,24 @@ void BuddyVm::release(unsigned long _a) {
 	fl_add(levelIndex,aBlock);
 	combineBlock(aBlock);
 
-	Console::puts("Released region of memory.\n");
+	//Console::puts("Released region of memory.\n");
 }
 
-bool BuddyVm::is_legitimate(unsigned long _address) {
-	
-	bool tmp = inRange(_address);
+bool BuddyVm::is_legitimate(uint64_t _address)
+{
+	//Console::puts("Checked whether address is part of an allocated region.\n");
 
-	Console::puts("Checked whether address is part of an allocated region.\n");
-	return tmp;
+	//base + info table size
+	uint64_t lb = (uint64_t)flTable + Machine::PAGE_SIZE;
+	uint64_t ub = lb + size - sizeof(fl_header) - blockSize;
+	if(_address >= lb && _address <= ub)
+	{
+		return true;
+	} 
+	else{
+		return false;
+	}
+
 }
 
 BuddyVm::fl_header* BuddyVm::combineBlock(fl_header* head){
@@ -121,7 +130,7 @@ BuddyVm::fl_header* BuddyVm::combineBlock(fl_header* head){
 	fl_header* left = (fl_header*)((char*)head-bounds);
 	fl_header* right = (fl_header*)((char*)head+bounds);
 
-	if(inRange((uint64_t)left)){
+	if(is_legitimate((uint64_t)left)){
 		if(left->cookie==vCOOKIE){
 			if(left->length == head->length){
 				head->cookie = 0;
@@ -133,7 +142,7 @@ BuddyVm::fl_header* BuddyVm::combineBlock(fl_header* head){
 			}	
 		}
 	}
-	else if(inRange((uint64_t)head)){
+	else if(is_legitimate((uint64_t)head)){
 		if(head->cookie == vCOOKIE){
 			if(right->length == head->length){
 				right->cookie = 0;
@@ -157,6 +166,7 @@ BuddyVm::fl_header* BuddyVm::segmentBlock(fl_header* head)
 		fl_header* freeBlock = (fl_header*)((char*)head + newBlockLength);
 		freeBlock->length = newBlockLength-sizeof(fl_header);	
 		freeBlock->cookie = vCOOKIE;
+		head->cookie = 0;
 		fl_remove(listNeeded,head);	
 		fl_add(newBlockLvl,freeBlock);
 		fl_add(newBlockLvl,head);
@@ -185,16 +195,3 @@ uint32_t BuddyVm::getFlLevel(uint32_t v)
 	return lvl-1;
 }
 
-bool BuddyVm::inRange(uint64_t v)
-{
-	//base + info table size
-	uint64_t lb = (uint64_t)flTable + Machine::PAGE_SIZE;
-	uint64_t ub = lb + size - sizeof(fl_header) - blockSize;
-	if(v >= lb && v <= ub)
-	{
-		return true;
-	} 
-	else{
-		return false;
-	}
-}

@@ -7,7 +7,7 @@
 #include "assert.H"
 
 extern "C" void __cxa_pure_virtual() { assert(false); } 
-
+#define TEST 1
 
 #include "types.H"
 #include "machine.H"
@@ -24,6 +24,7 @@ extern "C" void __cxa_pure_virtual() { assert(false); }
 #include "timer.H"
 
 #include "frame_pool.H"
+#include "memmap.H"
 #include "paging_low.H"
 #include "page_table.H"
 #include "vm_pool.H"
@@ -162,26 +163,17 @@ int main()
     Machine::enable_interrupts();
 
     // --- Setup Kernel Frame Pool Manager --- //
-    FramePool kernelframepool(KERNEL_POOL_START_FRAME, KERNEL_POOL_SIZE, 0, FramePool::needed_info_frames(KERNEL_POOL_SIZE));
+    MemMap kernelframepool(KERNEL_POOL_START_FRAME, KERNEL_POOL_SIZE, 0);
 
     // --- Setup User Frame Pool Manager --- //
-    uint32_t num_info_frames = FramePool::needed_info_frames(PROCESS_POOL_SIZE);
+    uint32_t num_info_frames = MemMap::needed_info_frames(PROCESS_POOL_SIZE);
     uint32_t process_info_pool = kernelframepool.get_frames(num_info_frames);
 
-    FramePool processframepool(PROCESS_POOL_START_FRAME, PROCESS_POOL_SIZE, process_info_pool, num_info_frames);
+    MemMap processframepool(PROCESS_POOL_START_FRAME, PROCESS_POOL_SIZE, process_info_pool);
 
     //leave space for ISA
     processframepool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
 
-#if TEST
-    Console::puts("Testing kernel mempool...");
-    test_framing(&kernelframepool, 10);
-    passed();
-
-    Console::puts("Testing process mempool...");
-    test_framing(&processframepool, 170);
-    passed();
-#endif
    // --- Setup and Enable Paging --- //
 
     class PageFault_Handler : public ExceptionHandler {
@@ -259,28 +251,6 @@ void loading_message()
     Console::puts("\n");
 }
 
-void test_framing(FramePool * _pool, uint32_t _allocs_to_go) {
-    if (_allocs_to_go > 0) {
-        uint32_t n_frames = _allocs_to_go % 4 + 1;
-        uint64_t frame = _pool->get_frames(n_frames);
-        uint32_t * value_array = (uint32_t*)(frame * (4 KB));        
-        for (uint32_t i = 0; i < (1 KB) * n_frames; i++) {
-            value_array[i] = _allocs_to_go;
-        }
-        test_framing(_pool, _allocs_to_go - 1);
-        for (uint32_t i = 0; i < (1 KB) * n_frames; i++) {
-            if(value_array[i] != _allocs_to_go){
-                Console::puts("MEMORY TEST FAILED. ERROR IN FRAME POOL\n");
-                Console::puts("i ="); Console::puti(i);
-                Console::puts("   v = "); Console::puti(value_array[i]); 
-                Console::puts("   n ="); Console::puti(_allocs_to_go);
-                Console::puts("\n");
-                for(;;); 
-            }
-        }
-        FramePool::release_frames(frame); 
-    }
-}
 
 void test_vmmem(VMPool *pool, int size1, int size2) {
    current_pool = pool;

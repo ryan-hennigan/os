@@ -29,9 +29,8 @@
 #ifdef assert
 #  undef assert
 #endif
-
 void _assert ( const char* _file, const uint32_t _line, const char* _message );
- 
+
 #ifdef NDEBUG        
 #  define assert( m ) ( ( void ) 0 )
 #else

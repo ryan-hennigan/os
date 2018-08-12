@@ -66,9 +66,14 @@ console.o: include/console.H console.C
 timer.o: include/timer.H timer.C
 	$(CPP) $(GCC_OPTIONS) -c -o timer.o timer.C
 
+bitmap.o: include/bitmap.H bitmap.C
+	$(CPP) $(GCC_OPTIONS) -c -o bitmap.o bitmap.C
 
-frame_pool.o: include/frame_pool.H frame_pool.C
-	$(CPP) $(GCC_OPTIONS) -c -o frame_pool.o frame_pool.C
+
+
+
+memmap.o: include/memmap.H memmap.C
+	$(CPP) $(GCC_OPTIONS) -c -o memmap.o memmap.C
 
 
 threads_low.o: threads_low.asm include/threads_low.H
@@ -82,13 +87,13 @@ thread.o: thread.C include/thread.H include/threads_low.H
 
 # ==== KERNEL MAIN FILE ====
 
-main.o: main.C include/vm_pool.H
+main.o: main.C
 	$(CPP) $(GCC_OPTIONS) -c -o main.o main.C
 
 
 kernel.bin: start.o utils.o main.o assert.o console.o gdt.o idt.o exceptions.o machine.o \
-    machine_low.o irq.o interrupts.o link.ld timer.o frame_pool.o paging_low.o page_table.o \
-    buddy_vm.o threads_low.o thread.o
+    machine_low.o irq.o interrupts.o link.ld timer.o memmap.o paging_low.o page_table.o \
+    buddy_vm.o threads_low.o thread.o bitmap.o
 	ld -melf_i386 -T link.ld -o ../build/kernel.bin start.o utils.o assert.o main.o console.o \
-	   gdt.o idt.o exceptions.o machine.o machine_low.o irq.o interrupts.o timer.o frame_pool.o \
-	   page_table.o paging_low.o buddy_vm.o threads_low.o thread.o
+	   gdt.o idt.o exceptions.o machine.o machine_low.o irq.o interrupts.o timer.o memmap.o \
+	   page_table.o paging_low.o buddy_vm.o threads_low.o thread.o bitmap.o

@@ -4,6 +4,8 @@
 #include "types.H"
 #include "list.H"
 
+
+/*--- use vm pool as node for a vmpool list ---*/
 class VMPool : public List<VMPool>{ 
   
 public:
